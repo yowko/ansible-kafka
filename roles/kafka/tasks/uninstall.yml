@@ -1,0 +1,24 @@
+---
+- name: Stop kafka service
+  become: true
+  systemd:
+    name: "{{item}}"
+    state: stopped
+    enabled: no
+  ignore_errors: yes
+  with_items: 
+    - kafka_{{kafka_port}}
+
+- name: Release kafka data dir
+  become: true
+  file:
+    path: "{{item}}"
+    state: absent
+  with_items: 
+    - "{{kafka_home}}_{{kafka_port}}"
+    - "/etc/systemd/system/kafka_{{kafka_port}}.service"
+
+- name: Systemd reread configs
+  become: true
+  systemd:
+    daemon_reload: yes

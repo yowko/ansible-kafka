@@ -1,0 +1,11 @@
+process.roles=broker,controller
+broker.id={{ host_index | int +1}}
+port={{kafka_port}}
+
+controller.quorum.voters={{voters}}
+listeners=PLAINTEXT://:{{kafka_port}},CONTROLLER://:{{kafka_port|int+1}}
+advertised.listeners=PLAINTEXT://{{ip}}:{{kafka_port}}
+controller.listener.names=CONTROLLER
+listener.security.protocol.map=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+
+log.dirs={{kafka_home}}_{{kafka_port}}/log

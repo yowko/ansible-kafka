@@ -1,0 +1,6 @@
+---
+host_index: "{{groups['kafka_all'].index(inventory_hostname)}}"
+voters: "{% set VOTER_ARR=[] %}{% for host in groups['kafka_all'] %}{% if VOTER_ARR.insert(loop.index,(loop.index|string)+'@'+hostvars[host].ip+':'+(hostvars[host].kafka_port|int+1)|string) %}{% endif %}{% endfor %}{{VOTER_ARR|join(',')}}"
+kafka_version: 3.4.0
+kafka_partitions: 3
+kafka_source_url: "https://downloads.apache.org/kafka/{{kafka_version}}/kafka_2.13-{{kafka_version}}.tgz"

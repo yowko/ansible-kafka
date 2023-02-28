@@ -1,0 +1,88 @@
+---
+- name: Install JDK
+  become: true
+  ansible.builtin.apt:
+    name: openjdk-11-jdk
+    state: present
+
+- name: Add user kafka
+  become: true
+  shell: |
+    groupadd --system kafka
+    useradd -s /sbin/nologin --system -g kafka kafka
+  ignore_errors: yes
+
+- name: Create kafka data dir
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '1775'
+    owner: kafka
+    group: kafka
+    recurse: true
+  with_items:
+    - "{{kafka_home}}_{{kafka_port}}"
+    - "{{kafka_home}}_{{kafka_port}}/log"
+
+- name: Downloading kafka
+  become: true
+  get_url:
+    url: "{{ kafka_source_url }}"
+    dest: "{{kafka_home}}_{{kafka_port}}/kafka.tgz"
+    mode: '0755'
+
+- name: Unzip kafka
+  become: true
+  shell: tar -xvzf kafka.tgz --strip 1
+  args:
+    chdir: "{{kafka_home}}_{{kafka_port}}"
+
+- name: Config kafka for cluster & Setup server id
+  become: true
+  template: 
+    src: templates/kafka.j2
+    dest: "{{kafka_home}}_{{kafka_port}}/config/kraft/server.properties"
+    owner: kafka
+    group: kafka
+
+- name: create cluster id
+  become: true
+  run_once: true
+  shell: "{{kafka_home}}_{{kafka_port}}/bin/kafka-storage.sh random-uuid"
+  register: cluster_id
+
+- name: create get cluster id
+  run_once: true
+  set_fact:
+    kafka_cluster_id: "{{ cluster_id.stdout }}"
+
+- name: Create storage
+  become: true
+  shell: "{{kafka_home}}_{{kafka_port}}/bin/kafka-storage.sh format -t {{kafka_cluster_id}} -c {{kafka_home}}_{{kafka_port}}/config/kraft/server.properties"
+    
+- name: Copy kafka's daemon config
+  become: true
+  template:
+    src:  templates/kafka.service.j2
+    dest: /etc/systemd/system/kafka_{{kafka_port}}.service
+    mode: '0755'
+    owner: kafka
+    group: kafka
+    backup: yes
+
+- name: Start kafka service
+  become: true
+  systemd:
+    name: kafka_{{kafka_port}}
+    state: started
+    enabled: yes    
+    daemon_reload: yes
+
+- name: Wait until service is ready
+  run_once: true
+  pause:
+    seconds: '10'
+
+- name: Assert kafka version
+  include_tasks: assert.yml

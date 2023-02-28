@@ -1,0 +1,3 @@
+---
+purpose: upgrade
+kafka_replicationfactor: 3
