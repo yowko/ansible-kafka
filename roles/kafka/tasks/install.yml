@@ -78,11 +78,3 @@
     state: started
     enabled: yes    
     daemon_reload: yes
-
-- name: Wait until service is ready
-  run_once: true
-  pause:
-    seconds: '10'
-
-- name: Assert kafka version
-  include_tasks: assert.yml

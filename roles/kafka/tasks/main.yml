@@ -1,6 +1,6 @@
 ---
 - name: Uninstall kafka
-  include: uninstall-kafka.yml
+  include_tasks: uninstall.yml
   when: 
     - purpose=='uninstall'
 
@@ -11,7 +11,7 @@
     - inventory_hostname in groups['kafka_all']
 
 - name: Restart kafka
-  include: restart.yml
+  include_tasks: restart.yml
   when: 
     - purpose=='restart'
     - inventory_hostname in groups['kafka_all']

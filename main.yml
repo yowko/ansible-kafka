@@ -1,3 +1,7 @@
 - hosts: kafka_all
+  any_errors_fatal: '{{ any_errors_fatal | default(true) }}'  
+  vars:
+    purpose: 'install'
   roles:
     - kafka
+  
